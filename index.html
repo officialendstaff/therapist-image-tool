@@ -113,6 +113,31 @@ function patch(){
 
   installStandPromptV25(w);
 
+  // ADJUSTMENT tab: reuse the existing STAND adjustment page unchanged.
+  const nav=d.querySelector('nav');
+  if(nav&&!([...nav.querySelectorAll('button')].some(b=>b.textContent.trim()==='ADJUSTMENT'))){
+    const poseBtn=[...nav.querySelectorAll('button')].find(b=>b.textContent.trim()==='POSE');
+    const adjustmentBtn=d.createElement('button');
+    adjustmentBtn.textContent='ADJUSTMENT';
+    adjustmentBtn.addEventListener('click',()=>w.showPage('standing',adjustmentBtn));
+    if(poseBtn&&poseBtn.nextSibling) nav.insertBefore(adjustmentBtn,poseBtn.nextSibling);
+    else nav.appendChild(adjustmentBtn);
+  }
+
+  // When the existing adjustment page is opened internally, highlight ADJUSTMENT instead of POSE.
+  if(!w.__adjustmentShowPagePatched){
+    const originalShowPage=w.showPage;
+    w.showPage=function(id,btn){
+      originalShowPage.call(w,id,btn);
+      if(id==='standing'&&!btn){
+        d.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+        const adjustmentBtn=[...d.querySelectorAll('nav button')].find(x=>x.textContent.trim()==='ADJUSTMENT');
+        if(adjustmentBtn)adjustmentBtn.classList.add('active');
+      }
+    };
+    w.__adjustmentShowPagePatched=true;
+  }
+
   const dl=[...d.querySelectorAll('nav button')].find(b=>b.textContent.trim()==='DOWNLOAD');
   if(dl)dl.remove();
   const downloadPage=d.getElementById('download');

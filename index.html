@@ -72,10 +72,30 @@ The result must look like THE SAME BASE WOMAN in THE SAME POSE, SAME BODY, SAME 
 
 The necessary background reference is attached to this message. Execute the background edit now.`;
 
+function patchStandFacePrompt(w){
+  w.standFaceInstruction=function(s){
+    const side=s.bodySide==='left'?'left':'right';
+    const imageSide=side==='left'?'image-left':'image-right';
+    const oppositeSide=side==='left'?'right':'left';
+
+    if(s.faceAngle==='same'){
+      return `FINAL HEAD + FACE ORIENTATION — CRITICAL: Keep the head and face naturally aligned with the torso's FINAL ${side.toUpperCase()} direction. This is an ABSOLUTE final orientation, not a relative turn from the current pose. Do NOT turn the face back toward the camera. Do NOT create an over-the-shoulder look. The nose and gaze must follow the torso direction. Keep the neck upright and do not tilt the head.`;
+    }
+
+    if(s.faceAngle==='90'){
+      return `FINAL HEAD + FACE ORIENTATION — CRITICAL: Set the face to an ABSOLUTE 90-degree side-profile orientation toward the ${side}. This is the FINAL face direction relative to the camera, not a 90-degree rotation from the torso or from the BASE WOMAN's current face. From the camera viewpoint, the nose must point clearly toward ${imageSide}. Show a true ${side}-facing profile. Do NOT turn the face toward the viewer. Do NOT create an over-the-shoulder look. Do NOT make eye contact with the camera. Keep the neck upright and do not tilt the head.`;
+    }
+
+    return `FINAL HEAD + FACE ORIENTATION — CRITICAL: Set the head and face to an ABSOLUTE ${s.faceAngle}-degree rear-oblique orientation toward the ${side}, using the camera/viewer as the fixed reference. This is the required FINAL face orientation, NOT a ${s.faceAngle}-degree rotation relative to the torso and NOT a turn back toward the camera. From the camera viewpoint, the nose must point toward ${imageSide} and slightly away from the camera, and the gaze must follow that same ${side}-rear direction. The ${oppositeSide} side of the face must become less visible. DO NOT turn the face back toward the camera. DO NOT look over the shoulder at the viewer. DO NOT make eye contact with the camera. DO NOT create a front-facing or camera-facing three-quarter face. THIS IS NOT A LOOK-BACK POSE. THIS IS NOT AN OVER-THE-SHOULDER POSE. Keep the neck upright and anatomically natural; do not tilt the head or twist the neck backward.`;
+  };
+}
+
 function patch(){
   const f=document.getElementById('app');
   const w=f.contentWindow,d=f.contentDocument;
   if(!d||!d.body)return;
+
+  patchStandFacePrompt(w);
 
   const dl=[...d.querySelectorAll('nav button')].find(b=>b.textContent.trim()==='DOWNLOAD');
   if(dl)dl.remove();

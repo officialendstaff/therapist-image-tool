@@ -72,24 +72,37 @@ The result must look like THE SAME BASE WOMAN in THE SAME POSE, SAME BODY, SAME 
 
 The necessary background reference is attached to this message. Execute the background edit now.`;
 
-function patchStandFacePrompt(w){
+function installStandPromptV25(w){
+  w.standBodyInstruction=function(s){
+    const side=s.bodySide==='left'?'left':'right';
+    const sideUpper=side.toUpperCase();
+    const imageSide=side==='left'?'image-left':'image-right';
+    if(s.bodyAngle==='90'){
+      return `Set the torso to a TRUE ${sideUpper} SIDE PROFILE, exactly 90 degrees from front-facing, using the camera/viewer as the fixed reference. The chest points toward ${imageSide}. Do not rotate farther toward the rear and do not turn back toward the camera.`;
+    }
+    const rear=Number(s.bodyAngle)||30;
+    const finalAngle=90+rear;
+    return `Set the torso to ${sideUpper}-REAR ${rear} DEGREES FROM A TRUE ${sideUpper} SIDE PROFILE. Use a true 90-degree ${side} side profile as the reference position, then rotate the torso an additional ${rear} degrees AWAY FROM THE CAMERA toward the rear. Therefore the FINAL torso orientation is approximately ${finalAngle} degrees from front-facing. This is NOT ${rear} degrees from front-facing. The ${side} side remains the nearer side to the camera while a controlled portion of the back becomes visible. Do not exceed this final angle. Do not rotate into a near-full-back pose.`;
+  };
+
   w.standFaceInstruction=function(s){
     const side=s.bodySide==='left'?'left':'right';
     const sideUpper=side.toUpperCase();
     const imageSide=side==='left'?'image-left':'image-right';
     const oppositeSide=side==='left'?'right':'left';
+    const bodyFinal=s.bodyAngle==='90'?90:90+(Number(s.bodyAngle)||30);
 
     if(s.faceAngle==='same'){
-      return `FINAL HEAD + FACE ORIENTATION — CRITICAL: Keep the head and face naturally aligned with the torso's FINAL ${sideUpper} direction. Do NOT add any extra neck rotation beyond the torso direction. Do NOT turn the face back toward the camera. Do NOT create an over-the-shoulder look. The nose and gaze must follow the torso direction. Keep the neck upright and do not tilt the head.`;
+      return `FINAL HEAD + FACE ORIENTATION — CRITICAL: Match the head and face to the torso's FINAL orientation exactly: approximately ${bodyFinal} degrees from front-facing toward the ${side}. There must be NO additional neck rotation relative to the torso. The nose and gaze must point in exactly the same ${side}-rear direction as the chest. Keep the eyes LEVEL. DO NOT look down. DO NOT look up. DO NOT make eye contact with the camera. DO NOT create a look-back or over-the-shoulder pose. Keep the neck upright and do not tilt the head.`;
     }
 
     if(s.faceAngle==='90'){
-      return `FINAL HEAD + FACE ORIENTATION — CRITICAL: Set the face to a TRUE ${sideUpper} SIDE PROFILE. Use the camera/viewer as the fixed reference. The FINAL face orientation is 90 degrees from front-facing. The nose must point clearly toward ${imageSide}. Do NOT turn the face toward the viewer. Do NOT create an over-the-shoulder look. Do NOT make eye contact with the camera. Keep the neck upright and do not tilt the head.`;
+      return `FINAL HEAD + FACE ORIENTATION — CRITICAL: Set the head and face to a TRUE ${sideUpper} SIDE PROFILE, exactly 90 degrees from front-facing, using the camera/viewer as the fixed reference. The nose must point horizontally toward ${imageSide}. Keep the gaze LEVEL in that same direction. DO NOT look down. DO NOT look up. DO NOT turn toward the viewer. DO NOT make eye contact with the camera. Keep the neck upright and do not tilt the head.`;
     }
 
-    const rearAmount=Number(s.faceAngle)||30;
-    const finalFromFront=90+rearAmount;
-    return `FINAL HEAD + FACE ORIENTATION — CRITICAL:\n\nSet the head and face to ${sideUpper}-REAR ${rearAmount} DEGREES FROM A TRUE ${sideUpper} PROFILE.\n\nUse a TRUE 90-DEGREE ${sideUpper} SIDE PROFILE as the reference position. From that true side-profile position, rotate the face an ADDITIONAL ${rearAmount} degrees AWAY FROM THE CAMERA toward the rear.\n\nTherefore, the FINAL face orientation is approximately ${finalFromFront} degrees from front-facing.\n\nThis is NOT ${rearAmount} degrees from front-facing.\nThis is NOT the same direction as a ${rearAmount}-degree torso orientation.\nThis is NOT a turn back toward the camera.\n\nFrom the camera viewpoint:\n- the face must be more rear-facing than a pure ${side} profile\n- only a limited portion of the facial features should remain visible\n- the nose must point strongly toward ${imageSide} and away from the viewer\n- the gaze must follow the same ${side}-rear direction\n- the ${oppositeSide} side of the face must become substantially less visible\n- NO eye contact with the camera\n- NO front-facing or camera-facing three-quarter face\n- NO look-back pose\n- NO over-the-shoulder pose\n\nKeep the neck upright and anatomically natural. Do not tilt the head.`;
+    const rear=Number(s.faceAngle)||30;
+    const finalAngle=90+rear;
+    return `FINAL HEAD + FACE ORIENTATION — CRITICAL:\nSet the head and face to ${sideUpper}-REAR ${rear} DEGREES FROM A TRUE ${sideUpper} SIDE PROFILE.\nUse a true 90-degree ${side} side profile as the reference position, then rotate the head an additional ${rear} degrees AWAY FROM THE CAMERA toward the rear.\nTherefore the FINAL face orientation is approximately ${finalAngle} degrees from front-facing.\nThis is NOT ${rear} degrees from front-facing. This face-angle setting is independent of the torso-angle setting.\nThe nose must point strongly toward ${imageSide} and away from the viewer. The gaze must remain LEVEL and follow the same ${side}-rear direction. DO NOT look down. DO NOT look up. The ${oppositeSide} side of the face must be less visible than in a true side profile. NO eye contact with the camera. NO front-facing three-quarter face. NO look-back pose. NO over-the-shoulder pose. Keep the neck upright and do not tilt the head.`;
   };
 }
 
@@ -98,23 +111,23 @@ function patch(){
   const w=f.contentWindow,d=f.contentDocument;
   if(!d||!d.body)return;
 
-  patchStandFacePrompt(w);
+  installStandPromptV25(w);
 
   const dl=[...d.querySelectorAll('nav button')].find(b=>b.textContent.trim()==='DOWNLOAD');
   if(dl)dl.remove();
   const downloadPage=d.getElementById('download');
   if(downloadPage)downloadPage.remove();
 
-  if(!d.getElementById('stand-v24-style')){
+  if(!d.getElementById('stand-v25-style')){
     const s=d.createElement('style');
-    s.id='stand-v24-style';
+    s.id='stand-v25-style';
     s.textContent='.stand-builder-link-v24{cursor:pointer;transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease}.stand-builder-link-v24:hover{border-color:#B79A63!important;box-shadow:0 0 0 2px rgba(183,154,99,.12)!important}.stand-builder-link-v24:active{transform:translateY(1px)}.stand-builder-link-v24:focus-visible{outline:2px solid #B79A63;outline-offset:3px}.stand-background-actions-v24{margin-top:9px}.stand-background-actions-v24 button{min-height:42px}';
     d.head.appendChild(s);
   }
 
   const preview=d.getElementById('preview-stand');
-  if(preview&&!preview.dataset.v24){
-    preview.dataset.v24='1';
+  if(preview&&!preview.dataset.v25){
+    preview.dataset.v25='1';
     preview.classList.add('stand-builder-link-v24');
     preview.setAttribute('role','button');
     preview.setAttribute('tabindex','0');
@@ -124,28 +137,31 @@ function patch(){
 
     const card=preview.closest('.pose-main-card');
     if(card){
-      card.classList.add('stand-home-card-v24');
       const old=[...card.querySelectorAll('button')].find(b=>b.textContent.trim()==='ポーズ設定');
       if(old)old.remove();
-      const actions=d.createElement('div');
-      actions.className='pose-inline-actions-v16 stand-background-actions-v24';
-      const bgBtn=d.createElement('button');
-      bgBtn.className='pose-register-btn';
-      bgBtn.textContent='背景画像';
-      bgBtn.addEventListener('click',e=>{e.stopPropagation();w.copyStandFixedBackground()});
-      const promptBtn=d.createElement('button');
-      promptBtn.className='pose-image-copy';
-      promptBtn.textContent='背景プロンプト';
-      promptBtn.addEventListener('click',e=>{e.stopPropagation();w.copyLiteral(STAND_BACKGROUND_PROMPT,'背景変更プロンプトをコピーしました')});
-      actions.append(bgBtn,promptBtn);
-      preview.insertAdjacentElement('afterend',actions);
-
-      const img=d.createElement('img');
-      img.id='stand-fixed-background-v24';
-      img.alt='STAND fixed background';
-      img.src='stand-bg.jpg';
-      img.style.display='none';
-      card.appendChild(img);
+      let actions=card.querySelector('.stand-background-actions-v24');
+      if(!actions){
+        actions=d.createElement('div');
+        actions.className='pose-inline-actions-v16 stand-background-actions-v24';
+        const bgBtn=d.createElement('button');
+        bgBtn.className='pose-register-btn';
+        bgBtn.textContent='背景画像';
+        bgBtn.addEventListener('click',e=>{e.stopPropagation();w.copyStandFixedBackground()});
+        const promptBtn=d.createElement('button');
+        promptBtn.className='pose-image-copy';
+        promptBtn.textContent='背景プロンプト';
+        promptBtn.addEventListener('click',e=>{e.stopPropagation();w.copyLiteral(STAND_BACKGROUND_PROMPT,'背景変更プロンプトをコピーしました')});
+        actions.append(bgBtn,promptBtn);
+        preview.insertAdjacentElement('afterend',actions);
+      }
+      if(!d.getElementById('stand-fixed-background-v24')){
+        const img=d.createElement('img');
+        img.id='stand-fixed-background-v24';
+        img.alt='STAND fixed background';
+        img.src='stand-bg.jpg';
+        img.style.display='none';
+        card.appendChild(img);
+      }
     }
   }
 
